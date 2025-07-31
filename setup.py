@@ -15,5 +15,7 @@ setup(
     version="0.3",
     setup_requires=["cython", "gmpy2"],
     ext_modules=cythonize(find_pyx(), language_level=3),
-    packages=find_packages()
+    packages=find_packages(),
+    package_data={'': ["K3n.obj", "Kumn.obj"]},
+    include_package_data=True,
 )

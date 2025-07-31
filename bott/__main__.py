@@ -15,8 +15,9 @@ def nthreads(n):
 
 class Cached:
     def __init__(self):
-        self.K3n = load("K3n")
-        self.Kumn = load("Kumn")
+        path = os.path.dirname(os.path.realpath(__file__))
+        self.K3n = load(path + "/K3n")
+        self.Kumn = load(path + "/Kumn")
 Cached = Cached()
 
 def list_to_partition(l):
@@ -338,6 +339,18 @@ class CobordismClass:
         if p.size() != self.dim:
             raise ValueError(str(p) + " is not a partition of " + str(self.dim))
         return self.__cn[p]
+
+    def euler(self):
+        """
+        Return the topological Euler characteristic.
+
+        EXAMPLES::
+
+            sage: from bott import hilb_K3
+            sage: hilb_K3(2).euler()
+            324
+        """
+        return self.chern_number([self.dim])
 
     def integral(self, c):
         """
@@ -800,6 +813,41 @@ class HKCobordismClass(CobordismClass):
                 ans += c * F[q] if q in F.keys() else 0
             return ans
 
+    def riemann_roch_polynomial(self, alpha=1, base_ring=QQ):
+        """
+        Return the Riemann-Roch polynomial of X, using the Fujiki constants of the
+        Todd class.
+
+        EXAMPLES::
+
+            sage: from bott import hilb_K3
+            sage: hilb_K3(2).riemann_roch_polynomial()
+            1/8*q^2 + 5/4*q + 3
+            sage: factor(_)
+            (1/8) * (q + 4) * (q + 6)
+
+        One can use the argument `alpha` to use other powers of the Todd class,
+        e.g., the square root of the Todd class.
+
+        EXAMPLES::
+
+            sage: hilb_K3(2).riemann_roch_polynomial(1/2)
+            1/8*q^2 + 5/8*q + 25/32
+            sage: factor(_)
+            (1/8) * (q + 5/2)^2
+        """
+        n = dim(self)//2
+        td = capped_exp(alpha*capped_log(todd(2*n, base_ring), 2*n), 2*n).homogeneous_components()
+        R = PolynomialRing(base_ring, "q")
+        return R([self.fujiki_constant(td[2*n-2*i])/factorial(2*i) for i in range(n+1)])
+
+def riemann_roch_polynomial(X, alpha=1, base_ring=QQ):
+    """
+    Return the Riemann-Roch polynomial of X by calling the method
+    `X.riemann_roch_polynomial()`.
+    """
+    return X.riemann_roch_polynomial(alpha, base_ring)
+
 @cached_function
 def hilb_K3(n, cached=True):
     """
@@ -1100,34 +1148,6 @@ def to_P1xP1k(L, k):
         return ws
     return TnBundle(P1xP1k, k*rank(L), loc)
 
-def riemann_roch_polynomial(X, alpha=1, base_ring=QQ):
-    """
-    Return the Riemann-Roch polynomial of X, using the Fujiki constants of the
-    Todd class.
-
-    EXAMPLES::
-
-        sage: from bott import hilb_K3, riemann_roch_polynomial
-        sage: riemann_roch_polynomial(hilb_K3(2))
-        1/8*q^2 + 5/4*q + 3
-        sage: factor(_)
-        (1/8) * (q + 4) * (q + 6)
-
-    One can use the argument `alpha` to use other powers of the Todd class,
-    e.g., the square root of the Todd class.
-    
-    EXAMPLES::
-
-        sage: riemann_roch_polynomial(hilb_K3(2), 1/2)
-        1/8*q^2 + 5/8*q + 25/32
-        sage: factor(_)
-        (1/8) * (q + 5/2)^2
-    """
-    n = dim(X)//2
-    td = capped_exp(alpha*capped_log(todd(2*n, base_ring), 2*n), 2*n).homogeneous_components()
-    R = PolynomialRing(base_ring, "q")
-    return R([X.fujiki_constant(td[2*n-2*i])/factorial(2*i) for i in range(n+1)])
-
 class CharClassPolyHK:
     """
     The class of a universal Characteristic class polynomial, with only even
@@ -1139,7 +1159,7 @@ class CharClassPolyHK:
         - `ch`: Chern character
         - `td`: Todd class
         - `sq`: square root of Todd class
-    
+
     EXAMPLES::
 
         sage: from bott import c, ch, td, sq
