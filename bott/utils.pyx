@@ -46,7 +46,7 @@ cpdef chern(long k, list w):
     """
     cdef long i
     cdef mpz ans = GMPy_MPZ_New(NULL)
-    cdef mpz[:] pp = np.array([GMPy_MPZ_New(NULL) for i in range(k+1)])
+    cdef mpz[:] pp = np.array([GMPy_MPZ_New(NULL) for i in range(k+1)], dtype=mpz)
     cdef long[:] w_si = np.empty(len(w), dtype=int)
     # initialization
     mpz_init(ans.z)
@@ -65,6 +65,6 @@ cpdef chern(long k, list w):
 
 cdef chern_mpz(long k, list w, mpz ans, mpz[:] pp):
     cdef long i
-    cdef mpz[:] w_mpz = np.array([GMPy_MPZ_From_mpz(mpz(w[i]).z) for i in range(len(w))])
+    cdef mpz[:] w_mpz = np.array([GMPy_MPZ_From_mpz(mpz(w[i]).z) for i in range(len(w))], dtype=mpz)
     dfs_mpz(k, len(w), w_mpz, ans, pp)
     return int(ans)
